@@ -1,25 +1,103 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import './App.css'; // For styling
 
-function App() {
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+  const [newTodo, setNewTodo] = useState("");
+
+  const addTodo = () => {
+    if (newTodo.trim()) {
+      setTodos([...todos, { text: newTodo, isComplete: false, isEditing: false }]);
+      setNewTodo("");
+    }
+  };
+
+  const handleComplete = (index) => {
+    const updatedTodos = todos.map((todo, i) =>
+      i === index ? { ...todo, isComplete: !todo.isComplete } : todo
+    );
+    setTodos(updatedTodos);
+  };
+
+  const handleEdit = (index) => {
+    const updatedTodos = todos.map((todo, i) =>
+      i === index ? { ...todo, isEditing: !todo.isEditing } : todo
+    );
+    setTodos(updatedTodos);
+  };
+
+  const handleSave = (index, newText) => {
+    const updatedTodos = todos.map((todo, i) =>
+      i === index ? { ...todo, text: newText, isEditing: false } : todo
+    );
+    setTodos(updatedTodos);
+  };
+
+  const handleRemove = (index) => {
+    setTodos(todos.filter((_, i) => i !== index));
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="todo-app">
+      <h1>Todo List</h1>
+      <div className="input-container">
+        <input
+          type="text"
+          value={newTodo}
+          onChange={(e) => setNewTodo(e.target.value)}
+          placeholder="Enter a new todo"
+        />
+        <button onClick={addTodo}>Add Todo</button>
+      </div>
+      {todos.length === 0 ? (
+        <p>No todos available. Add a todo to get started!</p>
+      ) : (
+        <ul>
+          {todos.map((todo, index) => (
+            <TodoItem
+              key={index}
+              todo={todo}
+              index={index}
+              onComplete={handleComplete}
+              onEdit={handleEdit}
+              onSave={handleSave}
+              onRemove={handleRemove}
+            />
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-export default App;
+function TodoItem({ todo, index, onComplete, onEdit, onSave, onRemove }) {
+  const [editText, setEditText] = useState(todo.text);
+
+  return (
+    <li className={`todo-item ${todo.isComplete ? 'completed' : ''}`}>
+      {todo.isEditing ? (
+        <>
+          <input
+            type="text"
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+          />
+          <button onClick={() => onSave(index, editText)}>Save</button>
+        </>
+      ) : (
+        <>
+          <span>{todo.text}</span>
+          <button onClick={() => onComplete(index)}>
+            {todo.isComplete ? 'Undo' : 'Complete'}
+          </button>
+          <button onClick={() => onEdit(index)} disabled={todo.isComplete || todo.isEditing}>
+            Edit
+          </button>
+          <button onClick={() => onRemove(index)}>Remove</button>
+        </>
+      )}
+    </li>
+  );
+}
+
+export default TodoApp;
